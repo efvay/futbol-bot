@@ -2,8 +2,8 @@ name: Daily Soccer
 
 on:
   schedule:
-    - cron: "0 13 * * *"   # 13:00 UTC = 8:00 AM Boston in winter (9:00 AM in summer)
-  workflow_dispatch:         # lets you also run it by hand from the Actions tab
+    - cron: "0 14 * * *"
+  workflow_dispatch:
 
 jobs:
   send:
