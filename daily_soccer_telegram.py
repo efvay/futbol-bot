@@ -16,9 +16,9 @@ from zoneinfo import ZoneInfo
 
 import requests
 
-BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "9145250443:AAFFExT8wxByZnYuF-fij76v1QngkQtnVmU")
-CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "9101219456")
-API_KEY = os.environ.get("API_FOOTBALL_KEY", "2662b6ea0f1ae4db497cd62f31082afc")
+BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "PASTE_TOKEN_HERE")
+CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "PASTE_CHAT_ID_HERE")
+API_KEY = os.environ.get("API_FOOTBALL_KEY", "PASTE_API_KEY_HERE")
 
 TIMEZONE = "America/New_York"  # times in the message use this zone
 
