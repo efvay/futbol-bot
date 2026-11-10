@@ -26,7 +26,7 @@ TZ_LABEL = "Boston time"  # text shown in the message header
 
 # League ID: (name, emoji). Verify IDs with GET /leagues?search=<name>
 LEAGUES = {
-    39: ("Premier League", "🏴󠁧󠁢󠁥󠁮󠁧󠁿"),
+    39: ("Premier League", "🇬🇧"),
     140: ("La Liga", "🇪🇸"),
     203: ("Süper Lig", "🇹🇷"),
     1: ("World Cup", "🏆"),
