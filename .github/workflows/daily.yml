@@ -1,0 +1,21 @@
+name: Daily Soccer
+
+on:
+  schedule:
+    - cron: "0 13 * * *"   # 13:00 UTC = 8:00 AM Boston in winter (9:00 AM in summer)
+  workflow_dispatch:         # lets you also run it by hand from the Actions tab
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests tzdata
+      - run: python daily_soccer_telegram.py
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
