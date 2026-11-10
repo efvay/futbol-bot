@@ -1,34 +1,43 @@
-"""Sends you today's soccer fixtures on Telegram (pretty version).
+"""Sends you today's soccer fixtures on Telegram.
 
 Setup:
-  pip install requests tzdata
+  pip install requests
   Environment variables:
     TELEGRAM_BOT_TOKEN  - token from @BotFather
     TELEGRAM_CHAT_ID    - your chat id
     API_FOOTBALL_KEY    - free key from dashboard.api-football.com
-Run once per day (Task Scheduler / GitHub Actions).
+Run once per day (cron / Task Scheduler / GitHub Actions).
 Uses only 1 API request per run (free plan allows 100/day).
 """
 import os
 from collections import defaultdict
 from datetime import datetime
-from html import escape
 from zoneinfo import ZoneInfo
 
 import requests
 
-BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "PASTE_TOKEN_HERE")
-CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "PASTE_CHAT_ID_HERE")
-API_KEY = os.environ.get("API_FOOTBALL_KEY", "PASTE_API_KEY_HERE")
+BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "9145250443:AAFFExT8wxByZnYuF-fij76v1QngkQtnVmU")
+CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "9101219456")
+API_KEY = os.environ.get("API_FOOTBALL_KEY", "2662b6ea0f1ae4db497cd62f31082afc")
 
-TIMEZONE = "America/New_York"  # Boston uses this zone (there is no America/Boston)
-TZ_LABEL = "Boston time"  # text shown in the message header
+TIMEZONE = "America/New_York"  # times in the message use this zone
 
-# League ID: (name, emoji). Verify IDs with GET /leagues?search=<name>
+# League IDs from API-Football. Verify with GET /leagues?search=<name>
+# because IDs can differ from what I list here.
 LEAGUES = {
-    39: ("Premier League", "🏴󠁧󠁢󠁥󠁮󠁧󠁿"),
-    140: ("La Liga", "🇪🇸"),
-    203: ("Süper Lig", "🇹🇷"),
+    39: "Premier League",
+    140: "La Liga",
+    
+    
+    203: "Turkish Super Lig",
+    2: "UEFA Champions League",
+    3: "UEFA Europa League",
+    848: "UEFA Conference League",
+    5: "UEFA Nations League",
+    1: "World Cup",
+    4: "Euros",
+    32: "World Cup Qualifiers (Europe)",
+    10: "International Friendlies",
 }
 
 
@@ -47,41 +56,37 @@ def get_fixtures(day: str) -> list:
 
 
 def build_message(fixtures: list, day: str) -> str:
-    pretty_day = datetime.strptime(day, "%Y-%m-%d").strftime("%A, %B %d")
-    header = f"⚽ <b>Today's Matches</b>\n📅 {pretty_day} · 🕒 {TZ_LABEL}"
-
     by_league = defaultdict(list)
     for f in fixtures:
         lid = f["league"]["id"]
         if lid in LEAGUES:
             kickoff = datetime.fromisoformat(f["fixture"]["date"]).strftime("%H:%M")
-            home = escape(f["teams"]["home"]["name"])
-            away = escape(f["teams"]["away"]["name"])
-            by_league[lid].append((kickoff, f"<code>{kickoff}</code>  {home} 🆚 {away}"))
+            line = f"{kickoff}  {f['teams']['home']['name']} vs {f['teams']['away']['name']}"
+            by_league[lid].append((kickoff, line))
 
     if not by_league:
-        return header + "\n\n😴 No matches today."
+        return f"No matches in your selected competitions today ({day})."
 
-    blocks = [header]
-    for lid, (name, emoji) in LEAGUES.items():  # keeps your order
+    parts = [f"Soccer today ({day}, {TIMEZONE})"]
+    for lid, name in LEAGUES.items():  # keeps your priority order
         if lid in by_league:
-            lines = [line for _, line in sorted(by_league[lid])]
-            blocks.append(f"{emoji} <b>{name}</b>\n" + "\n".join(lines))
-    return "\n\n".join(blocks)
+            parts.append(f"\n{name}")
+            parts.extend(line for _, line in sorted(by_league[lid]))
+    return "\n".join(parts)
 
 
 def send_telegram(text: str) -> None:
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    r = requests.post(
-        url,
-        json={"chat_id": CHAT_ID, "text": text, "parse_mode": "HTML"},
-        timeout=15,
-    )
-    r.raise_for_status()
+    # Telegram messages max out at 4096 characters, so split if needed.
+    for i in range(0, len(text), 4000):
+        r = requests.post(url, json={"chat_id": CHAT_ID, "text": text[i:i + 4000]}, timeout=15)
+        r.raise_for_status()
 
 
 if __name__ == "__main__":
     today = datetime.now(ZoneInfo(TIMEZONE)).strftime("%Y-%m-%d")
+    
     message = build_message(get_fixtures(today), today)
     print(message)
     send_telegram(message)
+
