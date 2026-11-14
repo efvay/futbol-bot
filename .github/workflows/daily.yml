@@ -2,7 +2,7 @@ name: Daily Soccer
 
 on:
   schedule:
-    - cron: "0 14 * * *"
+        - cron: "17 6 * * *"
   workflow_dispatch:
 
 jobs:
